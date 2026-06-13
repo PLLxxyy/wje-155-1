@@ -121,7 +121,7 @@ export default function SearchPage() {
         await addFavorite(routeId);
         const route = results.find(r => r.route.id === routeId);
         if (route) {
-          setFavorites(prev => [...prev, { route: route.route, stations: route.stations }]);
+          setFavorites(prev => [...prev, { route: route.route, stations: route.stations, ratings: route.ratings }]);
         }
       }
       setResults(prev =>
