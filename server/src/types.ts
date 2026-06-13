@@ -90,4 +90,28 @@ export interface SearchResultRoute {
   stations: RouteStationWithStation[];
   is_favorited: boolean;
   bus_positions: BusPosition[];
+  ratings: RouteRatings | null;
+}
+
+export interface RouteRatings {
+  avg_wait_time: number;
+  avg_crowdedness: number;
+  avg_punctuality: number;
+  avg_cleanliness: number;
+  review_count: number;
+}
+
+export interface FavoriteRouteData {
+  route: BusRoute;
+  stations: RouteStationWithStation[];
+  ratings: RouteRatings | null;
+}
+
+export interface RouteDetailResponse {
+  route: BusRoute;
+  stations: RouteStationWithStation[];
+  bus_positions: BusPosition[];
+  is_favorited: boolean;
+  reviews: Review[];
+  ratings: RouteRatings | null;
 }

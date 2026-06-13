@@ -8,6 +8,7 @@ import {
   RouteStationWithStation,
   BusPosition,
   SearchResultRoute,
+  RouteRatings,
 } from '../types';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'city-bus-jwt-secret-2024';
@@ -38,6 +39,33 @@ function getRouteStations(routeId: number): RouteStationWithStation[] {
     WHERE rs.route_id = ?
     ORDER BY rs.stop_order ASC
   `).all(routeId) as RouteStationWithStation[];
+}
+
+function getRouteRatings(routeId: number): RouteRatings | null {
+  const row = db.prepare(`
+    SELECT
+      COUNT(*) AS review_count,
+      AVG(wait_time_rating) AS avg_wait_time,
+      AVG(crowdedness_rating) AS avg_crowdedness,
+      AVG(punctuality_rating) AS avg_punctuality,
+      AVG(cleanliness_rating) AS avg_cleanliness
+    FROM reviews
+    WHERE route_id = ?
+  `).get(routeId) as {
+    review_count: number;
+    avg_wait_time: number | null;
+    avg_crowdedness: number | null;
+    avg_punctuality: number | null;
+    avg_cleanliness: number | null;
+  };
+  if (!row || row.review_count === 0) return null;
+  return {
+    review_count: row.review_count,
+    avg_wait_time: Math.round((row.avg_wait_time || 0) * 10) / 10,
+    avg_crowdedness: Math.round((row.avg_crowdedness || 0) * 10) / 10,
+    avg_punctuality: Math.round((row.avg_punctuality || 0) * 10) / 10,
+    avg_cleanliness: Math.round((row.avg_cleanliness || 0) * 10) / 10,
+  };
 }
 
 // GET /api/routes/search?q=...
@@ -79,6 +107,7 @@ router.get('/search', (req: AuthRequest, res: Response): void => {
         stations,
         is_favorited: isFavorited,
         bus_positions: simulateBusPositions(stations.length),
+        ratings: getRouteRatings(route.id),
       };
     });
 
@@ -133,6 +162,7 @@ router.get('/:id', (req: AuthRequest, res: Response): void => {
       bus_positions: busPositions,
       is_favorited: isFavorited,
       reviews,
+      ratings: getRouteRatings(routeId),
     });
   } catch (err) {
     res.status(500).json({ error: '获取线路详情失败' });
@@ -140,4 +170,4 @@ router.get('/:id', (req: AuthRequest, res: Response): void => {
 });
 
 export default router;
-export { getRouteStations };
+export { getRouteStations, getRouteRatings };

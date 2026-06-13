@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getRouteDetail, addFavorite, removeFavorite, submitReview, deleteReview } from '../api';
 import { useAuth } from '../App';
-import type { RouteDetailData, BusPosition, Review } from '../types';
+import type { RouteDetailData, BusPosition, Review, RouteRatings } from '../types';
 
 function StarRating({ rating }: { rating: number }) {
   return (
@@ -49,6 +49,57 @@ function BusPositionOnTimeline({ positions, stationIndex, stationCount }: { posi
           </span>
         );
       })}
+    </div>
+  );
+}
+
+function AvgStar({ value }: { value: number }) {
+  const full = Math.floor(value);
+  const half = value - full >= 0.5;
+  return (
+    <span className="rating-stars">
+      {[1, 2, 3, 4, 5].map(i => {
+        let cls = 'star';
+        if (i <= full) cls += ' filled';
+        else if (i === full + 1 && half) cls += ' half';
+        return <span key={i} className={cls}>★</span>;
+      })}
+      <span style={{ marginLeft: 4, color: 'var(--gray-500)', fontWeight: 600 }}>{value.toFixed(1)}</span>
+    </span>
+  );
+}
+
+function RatingsSummary({ ratings }: { ratings: RouteRatings | null }) {
+  if (!ratings) {
+    return (
+      <div style={{ fontSize: 13, color: 'var(--gray-400)', padding: '8px 0 0' }}>
+        暂无乘客评价
+      </div>
+    );
+  }
+  return (
+    <div style={{ fontSize: 13, color: 'var(--gray-700)', padding: '10px 0 0' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
+        <div>
+          <div style={{ color: 'var(--gray-500)', fontSize: 12, marginBottom: 2 }}>等车时间</div>
+          <AvgStar value={ratings.avg_wait_time} />
+        </div>
+        <div>
+          <div style={{ color: 'var(--gray-500)', fontSize: 12, marginBottom: 2 }}>拥挤程度</div>
+          <AvgStar value={ratings.avg_crowdedness} />
+        </div>
+        <div>
+          <div style={{ color: 'var(--gray-500)', fontSize: 12, marginBottom: 2 }}>准点率</div>
+          <AvgStar value={ratings.avg_punctuality} />
+        </div>
+        <div>
+          <div style={{ color: 'var(--gray-500)', fontSize: 12, marginBottom: 2 }}>卫生状况</div>
+          <AvgStar value={ratings.avg_cleanliness} />
+        </div>
+      </div>
+      <div style={{ marginTop: 6, fontSize: 12, color: 'var(--gray-400)' }}>
+        共 {ratings.review_count} 条乘客评价
+      </div>
     </div>
   );
 }
@@ -150,7 +201,7 @@ export default function BusDetail() {
     );
   }
 
-  const { route, stations, bus_positions } = data;
+  const { route, stations, bus_positions, ratings } = data;
   const stationNames = stations.map(s => s.station_name);
 
   return (
@@ -178,6 +229,7 @@ export default function BusDetail() {
           <div className="detail-meta-item">票价：¥{route.price}</div>
           <div className="detail-meta-item">共 {stations.length} 站</div>
         </div>
+        <RatingsSummary ratings={ratings} />
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>

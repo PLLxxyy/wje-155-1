@@ -2,7 +2,44 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getFavorites, removeFavorite, getSearchHistory, deleteHistoryItem, clearHistory } from '../api';
 import { useAuth } from '../App';
-import type { FavoriteRouteData, SearchHistoryItem } from '../types';
+import type { FavoriteRouteData, SearchHistoryItem, RouteRatings } from '../types';
+
+function AvgStar({ value }: { value: number }) {
+  const full = Math.floor(value);
+  const half = value - full >= 0.5;
+  return (
+    <span className="rating-stars" style={{ fontSize: 12 }}>
+      {[1, 2, 3, 4, 5].map(i => {
+        let cls = 'star';
+        if (i <= full) cls += ' filled';
+        else if (i === full + 1 && half) cls += ' half';
+        return <span key={i} className={cls}>★</span>;
+      })}
+      <span style={{ marginLeft: 4, color: 'var(--gray-500)', fontWeight: 500 }}>{value.toFixed(1)}</span>
+    </span>
+  );
+}
+
+function AvgRatingsRow({ ratings }: { ratings: RouteRatings | null }) {
+  if (!ratings) {
+    return (
+      <div style={{ fontSize: 12, color: 'var(--gray-400)', marginTop: 6 }}>
+        暂无评价
+      </div>
+    );
+  }
+  return (
+    <div style={{ fontSize: 12, color: 'var(--gray-600)', marginTop: 6 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px 12px' }}>
+        <span>等车 <AvgStar value={ratings.avg_wait_time} /></span>
+        <span>拥挤 <AvgStar value={ratings.avg_crowdedness} /></span>
+        <span>准点 <AvgStar value={ratings.avg_punctuality} /></span>
+        <span>卫生 <AvgStar value={ratings.avg_cleanliness} /></span>
+      </div>
+      <div style={{ marginTop: 4, color: 'var(--gray-400)' }}>共 {ratings.review_count} 条评价</div>
+    </div>
+  );
+}
 
 export default function Profile() {
   const { user } = useAuth();
@@ -114,6 +151,7 @@ export default function Profile() {
               <div className="route-stations-preview">
                 {fav.stations.map(s => s.station_name).join(' → ')}
               </div>
+              <AvgRatingsRow ratings={fav.ratings} />
             </div>
           ))
         )

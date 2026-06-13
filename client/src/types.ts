@@ -57,11 +57,20 @@ export interface Review {
   created_at: string;
 }
 
+export interface RouteRatings {
+  avg_wait_time: number;
+  avg_crowdedness: number;
+  avg_punctuality: number;
+  avg_cleanliness: number;
+  review_count: number;
+}
+
 export interface SearchResultRoute {
   route: BusRoute;
   stations: RouteStation[];
   is_favorited: boolean;
   bus_positions: BusPosition[];
+  ratings: RouteRatings | null;
 }
 
 export interface RouteDetailData {
@@ -70,11 +79,13 @@ export interface RouteDetailData {
   bus_positions: BusPosition[];
   is_favorited: boolean;
   reviews: Review[];
+  ratings: RouteRatings | null;
 }
 
 export interface FavoriteRouteData {
   route: BusRoute;
   stations: RouteStation[];
+  ratings: RouteRatings | null;
 }
 
 export interface SearchHistoryItem {

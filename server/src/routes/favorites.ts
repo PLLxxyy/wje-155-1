@@ -1,7 +1,8 @@
 import { Router, Response } from 'express';
 import { db } from '../db';
 import { authMiddleware } from '../middleware/auth';
-import { AuthRequest, BusRoute, RouteStationWithStation } from '../types';
+import { AuthRequest, BusRoute, RouteStationWithStation, FavoriteRouteData } from '../types';
+import { getRouteRatings } from './busRoutes';
 
 const router = Router();
 
@@ -17,7 +18,7 @@ router.get('/', authMiddleware, (req: AuthRequest, res: Response): void => {
       ORDER BY f.created_at DESC
     `).all(userId) as (BusRoute & { favorited_at: string })[];
 
-    const results = favorites.map(route => {
+    const results: FavoriteRouteData[] = favorites.map(route => {
       const stations = db.prepare(`
         SELECT rs.*, s.name AS station_name, s.latitude, s.longitude
         FROM route_stations rs
@@ -25,7 +26,11 @@ router.get('/', authMiddleware, (req: AuthRequest, res: Response): void => {
         WHERE rs.route_id = ?
         ORDER BY rs.stop_order ASC
       `).all(route.id) as RouteStationWithStation[];
-      return { route, stations };
+      return {
+        route,
+        stations,
+        ratings: getRouteRatings(route.id),
+      };
     });
 
     res.json(results);
