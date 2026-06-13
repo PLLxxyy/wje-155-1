@@ -85,7 +85,7 @@ export async function getReviews(routeId: number): Promise<Review[]> {
 
 export async function submitReview(
   routeId: number,
-  data: { wait_time_rating: number; crowdedness_rating: number; comment: string }
+  data: { wait_time_rating: number; crowdedness_rating: number; punctuality_rating: number; cleanliness_rating: number; comment: string }
 ): Promise<Review> {
   return request<Review>(`/reviews/${routeId}`, {
     method: 'POST',

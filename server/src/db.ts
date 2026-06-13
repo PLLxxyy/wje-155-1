@@ -55,6 +55,8 @@ function initDatabase(): void {
       user_id INTEGER NOT NULL,
       wait_time_rating INTEGER NOT NULL CHECK(wait_time_rating BETWEEN 1 AND 5),
       crowdedness_rating INTEGER NOT NULL CHECK(crowdedness_rating BETWEEN 1 AND 5),
+      punctuality_rating INTEGER NOT NULL DEFAULT 3 CHECK(punctuality_rating BETWEEN 1 AND 5),
+      cleanliness_rating INTEGER NOT NULL DEFAULT 3 CHECK(cleanliness_rating BETWEEN 1 AND 5),
       comment TEXT DEFAULT '',
       created_at TEXT DEFAULT (datetime('now', 'localtime')),
       FOREIGN KEY (route_id) REFERENCES bus_routes(id) ON DELETE CASCADE,
@@ -79,6 +81,16 @@ function initDatabase(): void {
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     );
   `);
+
+  // Migrate: add punctuality_rating and cleanliness_rating columns if they don't exist
+  const columns = db.prepare("PRAGMA table_info(reviews)").all() as { name: string }[];
+  const colNames = columns.map(c => c.name);
+  if (!colNames.includes('punctuality_rating')) {
+    db.exec("ALTER TABLE reviews ADD COLUMN punctuality_rating INTEGER NOT NULL DEFAULT 3 CHECK(punctuality_rating BETWEEN 1 AND 5)");
+  }
+  if (!colNames.includes('cleanliness_rating')) {
+    db.exec("ALTER TABLE reviews ADD COLUMN cleanliness_rating INTEGER NOT NULL DEFAULT 3 CHECK(cleanliness_rating BETWEEN 1 AND 5)");
+  }
 
   // Seed data
   const existingRoutes = db.prepare('SELECT COUNT(*) as count FROM bus_routes').get() as { count: number };

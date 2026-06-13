@@ -51,6 +51,8 @@ export interface Review {
   username: string;
   wait_time_rating: number;
   crowdedness_rating: number;
+  punctuality_rating: number;
+  cleanliness_rating: number;
   comment: string;
   created_at: string;
 }

@@ -63,6 +63,8 @@ export default function BusDetail() {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [waitRating, setWaitRating] = useState(0);
   const [crowdRating, setCrowdRating] = useState(0);
+  const [punctualityRating, setPunctualityRating] = useState(0);
+  const [cleanlinessRating, setCleanlinessRating] = useState(0);
   const [comment, setComment] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -99,8 +101,8 @@ export default function BusDetail() {
   async function handleSubmitReview(e: React.FormEvent) {
     e.preventDefault();
     if (!user) { navigate('/login'); return; }
-    if (!waitRating || !crowdRating) {
-      setError('请填写评分');
+    if (!waitRating || !crowdRating || !punctualityRating || !cleanlinessRating) {
+      setError('请填写所有评分项');
       return;
     }
     setSubmitting(true);
@@ -109,11 +111,15 @@ export default function BusDetail() {
       const newReview = await submitReview(routeId, {
         wait_time_rating: waitRating,
         crowdedness_rating: crowdRating,
+        punctuality_rating: punctualityRating,
+        cleanliness_rating: cleanlinessRating,
         comment,
       });
       setReviews(prev => [newReview, ...prev]);
       setWaitRating(0);
       setCrowdRating(0);
+      setPunctualityRating(0);
+      setCleanlinessRating(0);
       setComment('');
     } catch (err) {
       setError(err instanceof Error ? err.message : '提交评价失败');
@@ -238,9 +244,11 @@ export default function BusDetail() {
         {user && (
           <form onSubmit={handleSubmitReview} style={{ marginBottom: 20, padding: 16, background: 'var(--gray-50)', borderRadius: 8 }}>
             {error && <div className="alert alert-error">{error}</div>}
-            <div style={{ display: 'flex', gap: 24, marginBottom: 12 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px 24px', marginBottom: 12 }}>
               <RatingInput value={waitRating} onChange={setWaitRating} label="等车时间 (1=很长, 5=很短)" />
               <RatingInput value={crowdRating} onChange={setCrowdRating} label="车厢拥挤 (1=很挤, 5=宽松)" />
+              <RatingInput value={punctualityRating} onChange={setPunctualityRating} label="准点率 (1=不准, 5=很准)" />
+              <RatingInput value={cleanlinessRating} onChange={setCleanlinessRating} label="卫生状况 (1=很差, 5=很好)" />
             </div>
             <div className="form-group">
               <label className="form-label">留言（可选）</label>
@@ -283,6 +291,8 @@ export default function BusDetail() {
               <div className="review-ratings">
                 <span>等车时间：<StarRating rating={review.wait_time_rating} /></span>
                 <span>拥挤程度：<StarRating rating={review.crowdedness_rating} /></span>
+                <span>准点率：<StarRating rating={review.punctuality_rating} /></span>
+                <span>卫生状况：<StarRating rating={review.cleanliness_rating} /></span>
               </div>
               {review.comment && <div className="review-comment">{review.comment}</div>}
             </div>

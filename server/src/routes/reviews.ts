@@ -37,12 +37,17 @@ router.post('/:routeId', authMiddleware, (req: AuthRequest, res: Response): void
       return;
     }
 
-    const { wait_time_rating, crowdedness_rating, comment } = req.body;
-    if (!wait_time_rating || !crowdedness_rating) {
-      res.status(400).json({ error: '请填写等车时间和拥挤程度评分' });
+    const { wait_time_rating, crowdedness_rating, punctuality_rating, cleanliness_rating, comment } = req.body;
+    if (!wait_time_rating || !crowdedness_rating || !punctuality_rating || !cleanliness_rating) {
+      res.status(400).json({ error: '请填写所有评分项' });
       return;
     }
-    if (wait_time_rating < 1 || wait_time_rating > 5 || crowdedness_rating < 1 || crowdedness_rating > 5) {
+    if (
+      wait_time_rating < 1 || wait_time_rating > 5 ||
+      crowdedness_rating < 1 || crowdedness_rating > 5 ||
+      punctuality_rating < 1 || punctuality_rating > 5 ||
+      cleanliness_rating < 1 || cleanliness_rating > 5
+    ) {
       res.status(400).json({ error: '评分需在1-5之间' });
       return;
     }
@@ -54,9 +59,9 @@ router.post('/:routeId', authMiddleware, (req: AuthRequest, res: Response): void
     }
 
     db.prepare(`
-      INSERT INTO reviews (route_id, user_id, wait_time_rating, crowdedness_rating, comment)
-      VALUES (?, ?, ?, ?, ?)
-    `).run(routeId, userId, wait_time_rating, crowdedness_rating, comment || '');
+      INSERT INTO reviews (route_id, user_id, wait_time_rating, crowdedness_rating, punctuality_rating, cleanliness_rating, comment)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `).run(routeId, userId, wait_time_rating, crowdedness_rating, punctuality_rating, cleanliness_rating, comment || '');
 
     const newReview = db.prepare(`
       SELECT rv.*, u.username FROM reviews rv
